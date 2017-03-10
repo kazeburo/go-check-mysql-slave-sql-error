@@ -1,0 +1,30 @@
+{
+    "memo": "8681dc92bb909e489feb563c8e07759c40c069ba1169860c89710d1bc9af7004",
+    "projects": [
+        {
+            "name": "github.com/jessevdk/go-flags",
+            "branch": "master",
+            "revision": "460c7bb0abd6e927f2767cadc91aa6ef776a98b4",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/mackerelio/checkers",
+            "branch": "master",
+            "revision": "38c45ada0125799cb9e16dfeb12efce58fbcee8e",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/ziutek/mymysql",
+            "branch": "master",
+            "revision": "0582bcf675f52c0c2045c027fd135bd726048f45",
+            "packages": [
+                "mysql",
+                "native"
+            ]
+        }
+    ]
+}
