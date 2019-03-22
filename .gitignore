@@ -25,5 +25,5 @@ _testmain.go
 
 check-mysql-slave-sql-error
 vendor/
+dist/
 *~
-
