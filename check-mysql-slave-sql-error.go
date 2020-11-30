@@ -32,7 +32,7 @@ type connectionOpts struct {
 
 func main() {
 	ckr := checkSlaveSQLerror()
-	ckr.Name = "MySQL slave SQL error"
+	ckr.Name = "MySQL replica/slave SQL error"
 	ckr.Exit()
 }
 
@@ -118,7 +118,7 @@ func checkSlaveSQLerror() *checkers.Checker {
 	}
 
 	if err != nil {
-		return checkers.Critical(fmt.Sprintf("Couldn't fetch slave status: %v", err))
+		return checkers.Critical(fmt.Sprintf("Couldn't fetch replica/slave status: %v", err))
 	}
 
 	if len(lastSQLErrors) > 0 {
