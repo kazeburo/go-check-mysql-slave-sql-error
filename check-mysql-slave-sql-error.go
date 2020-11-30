@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -12,6 +13,9 @@ import (
 	"github.com/jessevdk/go-flags"
 	"github.com/mackerelio/checkers"
 )
+
+// Version by Makefile
+var version string
 
 type mysqlSetting struct {
 	Host    string        `short:"H" long:"host" default:"localhost" description:"Hostname"`
@@ -23,6 +27,7 @@ type mysqlSetting struct {
 
 type connectionOpts struct {
 	mysqlSetting
+	Version bool `short:"v" long:"version" description:"Show version"`
 }
 
 func main() {
@@ -33,9 +38,17 @@ func main() {
 
 func checkSlaveSQLerror() *checkers.Checker {
 	opts := connectionOpts{}
-	psr := flags.NewParser(&opts, flags.Default)
+	psr := flags.NewParser(&opts, flags.HelpFlag|flags.PassDoubleDash)
 	_, err := psr.Parse()
+	if opts.Version {
+		fmt.Fprintf(os.Stderr, "Version: %s\nCompiler: %s %s\n",
+			version,
+			runtime.Compiler,
+			runtime.Version())
+		os.Exit(0)
+	}
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
 
