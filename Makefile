@@ -1,15 +1,10 @@
 VERSION=0.0.4
 LDFLAGS=-ldflags "-X main.Version=${VERSION}"
+GO111MODULE=on
 
 all: check-mysql-slave-sql-error
 
 .PHONY: check-mysql-slave-sql-error
-
-bundle:
-	dep ensure
-
-update:
-	dep ensure -update
 
 check-mysql-slave-sql-error: check-mysql-slave-sql-error.go
 	go build $(LDFLAGS) -o check-mysql-slave-sql-error
