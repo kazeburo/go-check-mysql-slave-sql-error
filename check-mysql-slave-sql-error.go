@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"os"
 	"runtime"
@@ -18,10 +17,14 @@ import (
 // Version by Makefile
 var version string
 
-type Opts struct {
+type opts struct {
 	mysqlflags.MyOpts
 	Timeout time.Duration `long:"timeout" default:"10s" description:"Timeout to connect mysql"`
 	Version bool          `short:"v" long:"version" description:"Show version"`
+}
+
+type slave struct {
+	lastSQLError string `mysqlvar:"Last_SQL_Error"`
 }
 
 func main() {
@@ -31,7 +34,7 @@ func main() {
 }
 
 func checkSlaveSQLerror() *checkers.Checker {
-	opts := Opts{}
+	opts := opts{}
 	psr := flags.NewParser(&opts, flags.HelpFlag|flags.PassDoubleDash)
 	_, err := psr.Parse()
 	if opts.Version {
@@ -56,43 +59,9 @@ func checkSlaveSQLerror() *checkers.Checker {
 	defer cancel()
 	ch := make(chan error, 1)
 
-	var lastSQLErrors []string
+	var slaves []slave
 	go func() {
-		rows, e := db.Query("SHOW SLAVE STATUS")
-		if e != nil {
-			ch <- e
-			return
-		}
-		defer rows.Close()
-		cols, e := rows.Columns()
-		if e != nil {
-			ch <- e
-			return
-		}
-		vals := make([]interface{}, len(cols))
-		idxLastSQLError := -1
-		for i, v := range cols {
-			vals[i] = new(sql.RawBytes)
-			if v == "Last_SQL_Error" {
-				idxLastSQLError = i
-			}
-		}
-		if idxLastSQLError < 0 {
-			ch <- fmt.Errorf("Could not find Last_SQL_Error in columns")
-			return
-		}
-		for rows.Next() {
-			e = rows.Scan(vals...)
-			if e != nil {
-				ch <- e
-				return
-			}
-			lastSQLError := string(*vals[idxLastSQLError].(*sql.RawBytes))
-			if lastSQLError != "" {
-				lastSQLErrors = append(lastSQLErrors, lastSQLError)
-			}
-		}
-		ch <- nil
+		ch <- mysqlflags.Query(db, "SHOW SLAVE STATUS").Scan(&slaves)
 	}()
 
 	select {
@@ -104,6 +73,13 @@ func checkSlaveSQLerror() *checkers.Checker {
 
 	if err != nil {
 		return checkers.Critical(fmt.Sprintf("Couldn't fetch replica/slave status: %v", err))
+	}
+
+	var lastSQLErrors []string
+	for _, slave := range slaves {
+		if slave.lastSQLError != "" {
+			lastSQLErrors = append(lastSQLErrors, slave.lastSQLError)
+		}
 	}
 
 	if len(lastSQLErrors) > 0 {
